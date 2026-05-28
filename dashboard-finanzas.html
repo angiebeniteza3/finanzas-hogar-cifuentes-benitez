@@ -401,7 +401,7 @@ function getRows(mes, persona, tipo, cat) {
   const rows = sheetData[mes] || [];
   return rows.slice(1).filter(r =>
     r[0]===persona && r[1]===tipo && r[4]===cat && r[2] && r[3]
-  ).map(r => ({ c: r[2], v: parseFloat((r[3]||'0').replace(/[^0-9.\-]/g,'')) || 0 }));
+  ).map(r => { const raw=(r[3]||'0').toString().replace(/[^0-9,\.\-]/g,''); const cleaned=raw.replace(/\./g,'').replace(',','.'); return {c:r[2], v:parseFloat(cleaned)||0}; });
 }
 
 function sumRows(rows) { return rows.reduce((s,r)=>s+r.v, 0); }
