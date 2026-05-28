@@ -372,7 +372,9 @@ function parseCSV(text) {
 
 // ── FETCH ──
 async function fetchCSV(url) {
-  const r = await fetch(url);
+  // Add timestamp to bust cache
+  const bustUrl = url + '&t=' + Date.now();
+  const r = await fetch(bustUrl, {cache: 'no-store'});
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return parseCSV(await r.text());
 }
