@@ -605,11 +605,12 @@ function calcBebe(upTo) {
 function calcBucket(upTo, keyword) {
   let t=0;
   const meses = upTo==='mayo'?['mayo']:['mayo','junio'];
+  const kw = keyword.trim().toLowerCase();
   meses.forEach(mes=>{
     ['A','M'].forEach(p=>{
       [...getRows(mes,p,'FIJO','EGR'),...getRows(mes,p,'VAR','EGR')]
-        .filter(r=>r.c.trim().toLowerCase() === keyword.trim().toLowerCase())
-        .forEach(r=>t+=r.v);
+        .filter(r=> r.c && r.c.trim().toLowerCase() === kw)
+        .forEach(r=>{ t+=r.v; });
     });
   });
   return t;
@@ -633,12 +634,12 @@ function renderMetas() {
   const bb=document.getElementById('bebe-badge'); if(bb) bb.textContent=fmt(bebeAcum);
 
   // Carro
-  const carrAcum=calcBucket(mes,'Carro');
+  const carrAcum=calcBucket(mes,'Ahorro Carro');
   set('carro-base',fmt(BASE_CARRO)); set('carro-acum',fmt(carrAcum)); set('carro-total',fmt(BASE_CARRO+carrAcum));
   const cb=document.getElementById('carro-badge'); if(cb) cb.textContent=fmt(BASE_CARRO+carrAcum);
 
   // Mudanza
-  const mudAcum=calcBucket(mes,'Mudanza');
+  const mudAcum=calcBucket(mes,'Ahorro Mudanza');
   set('mudanza-base',fmt(BASE_MUDANZA)); set('mudanza-acum',fmt(mudAcum)); set('mudanza-total',fmt(BASE_MUDANZA+mudAcum));
   const mub=document.getElementById('mudanza-badge'); if(mub) mub.textContent=fmt(BASE_MUDANZA+mudAcum);
 
