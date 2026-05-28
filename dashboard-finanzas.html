@@ -397,11 +397,42 @@ async function loadAllData() {
 // ── DATA HELPERS ──
 // Sheet columns: A=persona(A/M), B=tipo(FIJO/VAR), C=concepto, D=monto, E=cat(ING/EGR)
 // Row 0 = header, skip it
+function parseMonto(raw) {
+  // Handle Colombian format: $3.429.200 or 3.429.200 or 3429200
+  if (!raw) return 0;
+  const s = raw.toString().trim();
+  // Remove $ and spaces
+  const noSymbol = s.replace(/[$\s]/g, '');
+  // If it has dots but no comma: dots are thousands separators
+  // e.g. 3.429.200 -> 3429200
+  const dotCount = (noSymbol.match(/\./g)||[]).length;
+  const commaCount = (noSymbol.match(/,/g)||[]).length;
+  let num;
+  if (commaCount === 1 && dotCount >= 1) {
+    // European: 3.429,20 -> 3429.20
+    num = parseFloat(noSymbol.replace(/\./g,'').replace(',','.'));
+  } else if (dotCount >= 2) {
+    // Multiple dots = thousands separators: 3.429.200 -> 3429200
+    num = parseFloat(noSymbol.replace(/\./g,''));
+  } else if (dotCount === 1) {
+    // Could be decimal: check if after dot has 3 digits (thousands) or 1-2 (decimal)
+    const afterDot = noSymbol.split('.')[1];
+    if (afterDot && afterDot.length === 3) {
+      num = parseFloat(noSymbol.replace('.',''));
+    } else {
+      num = parseFloat(noSymbol);
+    }
+  } else {
+    num = parseFloat(noSymbol.replace(/,/g,''));
+  }
+  return isNaN(num) ? 0 : num;
+}
+
 function getRows(mes, persona, tipo, cat) {
   const rows = sheetData[mes] || [];
   return rows.slice(1).filter(r =>
     r[0]===persona && r[1]===tipo && r[4]===cat && r[2] && r[3]
-  ).map(r => { const raw=(r[3]||'0').toString().replace(/[^0-9,\.\-]/g,''); const cleaned=raw.replace(/\./g,'').replace(',','.'); return {c:r[2], v:parseFloat(cleaned)||0}; });
+  ).map(r => ({ c: r[2], v: parseMonto(r[3]) }));
 }
 
 function sumRows(rows) { return rows.reduce((s,r)=>s+r.v, 0); }
