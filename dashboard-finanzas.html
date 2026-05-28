@@ -596,7 +596,7 @@ function calcBebe(upTo) {
   meses.forEach(mes=>{
     ['A','M'].forEach(p=>{
       [...getRows(mes,p,'FIJO','EGR'),...getRows(mes,p,'VAR','EGR')]
-        .filter(r=>r.c.toLowerCase().includes('beb'))
+        .filter(r=>r.c.trim().toLowerCase().startsWith('ahorro bebé') || r.c.trim().toLowerCase().startsWith('ahorro bebe'))
         .forEach(r=>t+=r.v);
     });
   });
@@ -608,7 +608,7 @@ function calcBucket(upTo, keyword) {
   meses.forEach(mes=>{
     ['A','M'].forEach(p=>{
       [...getRows(mes,p,'FIJO','EGR'),...getRows(mes,p,'VAR','EGR')]
-        .filter(r=>r.c.toLowerCase().includes(keyword.toLowerCase()))
+        .filter(r=>r.c.trim().toLowerCase() === keyword.trim().toLowerCase())
         .forEach(r=>t+=r.v);
     });
   });
