@@ -149,7 +149,8 @@ input[type=number]{text-align:right;}
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
     <select id="mes-sel" onchange="onMesChange()">
       <option value="mayo">Mayo 2026</option>
-      <option value="junio" selected>Junio 2026</option>
+      <option value="junio">Junio 2026</option>
+      <option value="julio" selected>Julio 2026</option>
     </select>
     <button class="btn-reload" onclick="loadAllData()">↺ Actualizar</button>
   </div>
@@ -341,6 +342,7 @@ input[type=number]{text-align:right;}
 const CSV = {
   mayo:   'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDLssK6adZfkPMgXC34ASBaFznDAP2BEVJMS0Bm2FN4P4FN-IT_MQkjpvu0_V-DZSlZlevZjjgcbTO/pub?gid=598036146&single=true&output=csv',
   junio:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDLssK6adZfkPMgXC34ASBaFznDAP2BEVJMS0Bm2FN4P4FN-IT_MQkjpvu0_V-DZSlZlevZjjgcbTO/pub?gid=1404526422&single=true&output=csv',
+  julio:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDLssK6adZfkPMgXC34ASBaFznDAP2BEVJMS0Bm2FN4P4FN-IT_MQkjpvu0_V-DZSlZlevZjjgcbTO/pub?gid=437554041&single=true&output=csv',
   ahorros:'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDLssK6adZfkPMgXC34ASBaFznDAP2BEVJMS0Bm2FN4P4FN-IT_MQkjpvu0_V-DZSlZlevZjjgcbTO/pub?gid=255021068&single=true&output=csv',
 };
 
@@ -348,11 +350,13 @@ const CSV = {
 const BASE_BEBE    = 4800000;
 const BASE_CARRO   = 0;
 const BASE_MUDANZA = 690000;
-const MESES_LABELS = ['Mayo','Junio'];
+const MESES_LABELS = ['Mayo','Junio','Julio'];
+const MESES_ORDER = ['mayo','junio','julio'];
+const MESES_DISPLAY = {mayo:'Mayo', junio:'Junio', julio:'Julio'};
 const CC = ['#264653','#2A9D8F','#E9C46A','#F4A261','#E76F51','#8ECAE6','#B5838D','#A8DADC','#457B9D'];
 
 // ── STATE ──
-let sheetData = { mayo: [], junio: [], ahorros: [] };
+let sheetData = { mayo: [], junio: [], julio: [], ahorros: [] };
 let chartType = 'bar';
 let donutC=null, trendC=null, ingC=null, gasC=null, ahorroC=null;
 
@@ -383,10 +387,10 @@ async function loadAllData() {
   document.getElementById('loading-overlay').style.display='flex';
   document.getElementById('error-banner').style.display='none';
   try {
-    const [mayo, junio, ahorros] = await Promise.all([
-      fetchCSV(CSV.mayo), fetchCSV(CSV.junio), fetchCSV(CSV.ahorros)
+    const [mayo, junio, julio, ahorros] = await Promise.all([
+      fetchCSV(CSV.mayo), fetchCSV(CSV.junio), fetchCSV(CSV.julio), fetchCSV(CSV.ahorros)
     ]);
-    sheetData = { mayo, junio, ahorros };
+    sheetData = { mayo, junio, julio, ahorros };
     document.getElementById('loading-overlay').style.display='none';
     renderAll();
   } catch(e) {
@@ -444,7 +448,7 @@ function showPage(id, btn) {
 
 function onMesChange() {
   document.getElementById('periodo-label').textContent =
-    (getMes()==='mayo'?'Mayo':'Junio')+' 2026';
+    MESES_DISPLAY[getMes()]+' 2026';
   renderAll();
 }
 
@@ -573,7 +577,8 @@ function renderDonut(mes) {
 // ── SAVINGS ──
 function calcBebe(upTo) {
   let t=BASE_BEBE;
-  const meses = upTo==='mayo'?['mayo']:['mayo','junio'];
+  const idx = MESES_ORDER.indexOf(upTo);
+  const meses = MESES_ORDER.slice(0, idx+1);
   meses.forEach(mes=>{
     ['A','M'].forEach(p=>{
       [...getRows(mes,p,'FIJO','EGR'),...getRows(mes,p,'VAR','EGR')]
@@ -585,7 +590,8 @@ function calcBebe(upTo) {
 }
 function calcBucket(upTo, keyword) {
   let t=0;
-  const meses = upTo==='mayo'?['mayo']:['mayo','junio'];
+  const idx = MESES_ORDER.indexOf(upTo);
+  const meses = MESES_ORDER.slice(0, idx+1);
   const kw = keyword.trim().toLowerCase();
   meses.forEach(mes=>{
     ['A','M'].forEach(p=>{
@@ -604,12 +610,13 @@ function renderMetas() {
   // Bebé
   const bebeAcum=calcBebe(mes);
   const mp=meta>0?(bebeAcum/meta*100):0;
-  set('meta-hasta',mes==='mayo'?'Mayo':'Jun');
+  set('meta-hasta',MESES_DISPLAY[mes].slice(0,3));
   set('meta-acum-val',fmt(bebeAcum));
   const mb=document.getElementById('meta-bar-big'); if(mb){mb.style.width=Math.min(100,Math.max(0,mp))+'%';mb.style.background=mp>=100?'var(--green)':mp>=50?'#E9C46A':'#E76F51';}
   set('meta-pct-label',mp.toFixed(1)+'%');
   set('meta-anual-label',fmt(meta));
-  const mesesR=mes==='mayo'?7:6;
+  const mesIdx=MESES_ORDER.indexOf(mes);
+  const mesesR=11-(4+mesIdx); // Dec=11, May=4 (0-indexed real calendar months)
   const needed=mesesR>0?Math.max(0,meta-bebeAcum)/mesesR:0;
   set('meta-needed',fmt(needed)+'/mes');
   const bb=document.getElementById('bebe-badge'); if(bb) bb.textContent=fmt(bebeAcum);
@@ -625,9 +632,9 @@ function renderMetas() {
   const mub=document.getElementById('mudanza-badge'); if(mub) mub.textContent=fmt(BASE_MUDANZA+mudAcum);
 
   // Chart
-  const labels=['Mayo','Junio'];
-  const bebeArr=[calcBebe('mayo'),calcBebe('junio')];
-  const metaLine=[meta,meta];
+  const labels=MESES_ORDER.map(m=>MESES_DISPLAY[m]);
+  const bebeArr=MESES_ORDER.map(m=>calcBebe(m));
+  const metaLine=MESES_ORDER.map(()=>meta);
   if(ahorroC) ahorroC.destroy();
   const ac=document.getElementById('ahorro-chart'); if(!ac) return;
   ahorroC=new Chart(ac,{type:'bar',data:{labels,datasets:[
@@ -645,14 +652,14 @@ function setChart(t) {
 }
 
 function renderTrend() {
-  const labels=['Mayo','Junio'];
-  const ingresos=labels.map((_,i)=>{ const m=i===0?'mayo':'junio'; return getIng(m,'A')+getIng(m,'M'); });
-  const gastos  =labels.map((_,i)=>{ const m=i===0?'mayo':'junio'; return getEgr(m,'A')+getEgr(m,'M'); });
+  const labels=MESES_ORDER.map(m=>MESES_DISPLAY[m]);
+  const ingresos=MESES_ORDER.map(m=> getIng(m,'A')+getIng(m,'M'));
+  const gastos  =MESES_ORDER.map(m=> getEgr(m,'A')+getEgr(m,'M'));
   const ahorro  =ingresos.map((v,i)=>v-gastos[i]);
-  const aIng=labels.map((_,i)=>getIng(i===0?'mayo':'junio','A'));
-  const mIng=labels.map((_,i)=>getIng(i===0?'mayo':'junio','M'));
-  const aGas=labels.map((_,i)=>getEgr(i===0?'mayo':'junio','A'));
-  const mGas=labels.map((_,i)=>getEgr(i===0?'mayo':'junio','M'));
+  const aIng=MESES_ORDER.map(m=>getIng(m,'A'));
+  const mIng=MESES_ORDER.map(m=>getIng(m,'M'));
+  const aGas=MESES_ORDER.map(m=>getEgr(m,'A'));
+  const mGas=MESES_ORDER.map(m=>getEgr(m,'M'));
   const isL=chartType==='line';
   const opts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:11}}},y:{ticks:{callback:v=>'$'+(v/1000000).toFixed(1)+'M',font:{size:11}}}}};
   if(trendC) trendC.destroy();
