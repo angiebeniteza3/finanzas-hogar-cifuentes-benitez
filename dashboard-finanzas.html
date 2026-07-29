@@ -150,7 +150,8 @@ input[type=number]{text-align:right;}
     <select id="mes-sel" onchange="onMesChange()">
       <option value="mayo">Mayo 2026</option>
       <option value="junio">Junio 2026</option>
-      <option value="julio" selected>Julio 2026</option>
+      <option value="julio">Julio 2026</option>
+      <option value="agosto" selected>Agosto 2026</option>
     </select>
     <button class="btn-reload" onclick="loadAllData()">↺ Actualizar</button>
   </div>
@@ -296,7 +297,7 @@ input[type=number]{text-align:right;}
       <div class="bucket-title">🍼 Ahorro Bebé <span id="bebe-badge" class="badge badge-ok">—</span></div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
         <label style="font-size:.72rem;color:var(--muted);">Meta anual ($)</label>
-        <input type="number" id="meta-anual" value="12000000" oninput="renderMetas()" style="width:150px;">
+        <input type="number" id="meta-anual" value="10000000" oninput="renderMetas()" style="width:150px;">
       </div>
       <div style="display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:3px;">
         <span>Acumulado a <span id="meta-hasta">—</span></span>
@@ -321,11 +322,24 @@ input[type=number]{text-align:right;}
     </div>
     <div class="bucket">
       <div class="bucket-title">📦 Ahorro Mudanza <span id="mudanza-badge" class="badge badge-warn">—</span></div>
-      <div style="font-size:.7rem;color:var(--muted);margin-bottom:6px;">Colchón sin meta · Base mayo: $690.000</div>
-      <div class="bucket-row">
+      <div style="font-size:.7rem;color:var(--muted);margin-bottom:8px;">Colchón sin meta · Base: $690.000</div>
+      <div class="bucket-row" style="margin-bottom:10px;">
         <div><div>Base previa</div><div id="mudanza-base">—</div></div>
         <div><div>Aportes acum.</div><div id="mudanza-acum">—</div></div>
-        <div><div>Total</div><div style="color:var(--amber);" id="mudanza-total">—</div></div>
+        <div><div>Total bruto</div><div id="mudanza-bruto">—</div></div>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px;">
+        <div style="font-size:.72rem;color:var(--muted);margin-bottom:5px;">Gastos de mudanza registrados</div>
+        <div id="mudanza-gastos-list"></div>
+        <div style="display:flex;gap:8px;margin-top:6px;">
+          <input type="text" id="mudanza-gasto-concepto" placeholder="Concepto" style="flex:2;">
+          <input type="number" id="mudanza-gasto-monto" placeholder="Monto" style="flex:1;">
+          <button class="btn btn-sm" onclick="addGastoMudanza()" style="background:var(--amber-bg);color:var(--amber);border-color:var(--amber-bg);">+ Agregar</button>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:.78rem;"><span style="color:var(--muted);">Total gastado:</span> <span id="mudanza-gastado" style="font-weight:500;color:var(--red);">—</span></div>
+        <div style="font-size:.9rem;font-weight:500;"><span style="color:var(--muted);font-size:.72rem;">Saldo restante:</span> <span id="mudanza-restante" style="color:var(--amber);">—</span></div>
       </div>
     </div>
   </div>
@@ -343,20 +357,23 @@ const CSV = {
   mayo:   'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDLssK6adZfkPMgXC34ASBaFznDAP2BEVJMS0Bm2FN4P4FN-IT_MQkjpvu0_V-DZSlZlevZjjgcbTO/pub?gid=598036146&single=true&output=csv',
   junio:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDLssK6adZfkPMgXC34ASBaFznDAP2BEVJMS0Bm2FN4P4FN-IT_MQkjpvu0_V-DZSlZlevZjjgcbTO/pub?gid=1404526422&single=true&output=csv',
   julio:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDLssK6adZfkPMgXC34ASBaFznDAP2BEVJMS0Bm2FN4P4FN-IT_MQkjpvu0_V-DZSlZlevZjjgcbTO/pub?gid=437554041&single=true&output=csv',
+  agosto: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDLssK6adZfkPMgXC34ASBaFznDAP2BEVJMS0Bm2FN4P4FN-IT_MQkjpvu0_V-DZSlZlevZjjgcbTO/pub?gid=618111072&single=true&output=csv',
   ahorros:'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDLssK6adZfkPMgXC34ASBaFznDAP2BEVJMS0Bm2FN4P4FN-IT_MQkjpvu0_V-DZSlZlevZjjgcbTO/pub?gid=255021068&single=true&output=csv',
 };
 
 // ── CONSTANTS ──
 const BASE_BEBE    = 4800000;
+// Gastos de mudanza (persistidos en memoria, editables)
+let gastosMudanza = [{concepto:'Gastos agosto', monto:1235000}];
 const BASE_CARRO   = 0;
 const BASE_MUDANZA = 690000;
 const MESES_LABELS = ['Mayo','Junio','Julio'];
-const MESES_ORDER = ['mayo','junio','julio'];
-const MESES_DISPLAY = {mayo:'Mayo', junio:'Junio', julio:'Julio'};
+const MESES_ORDER = ['mayo','junio','julio','agosto'];
+const MESES_DISPLAY = {mayo:'Mayo', junio:'Junio', julio:'Julio', agosto:'Agosto'};
 const CC = ['#264653','#2A9D8F','#E9C46A','#F4A261','#E76F51','#8ECAE6','#B5838D','#A8DADC','#457B9D'];
 
 // ── STATE ──
-let sheetData = { mayo: [], junio: [], julio: [], ahorros: [] };
+let sheetData = { mayo: [], junio: [], julio: [], agosto: [], ahorros: [] };
 let chartType = 'bar';
 let donutC=null, trendC=null, ingC=null, gasC=null, ahorroC=null;
 
@@ -387,10 +404,10 @@ async function loadAllData() {
   document.getElementById('loading-overlay').style.display='flex';
   document.getElementById('error-banner').style.display='none';
   try {
-    const [mayo, junio, julio, ahorros] = await Promise.all([
-      fetchCSV(CSV.mayo), fetchCSV(CSV.junio), fetchCSV(CSV.julio), fetchCSV(CSV.ahorros)
+    const [mayo, junio, julio, agosto, ahorros] = await Promise.all([
+      fetchCSV(CSV.mayo), fetchCSV(CSV.junio), fetchCSV(CSV.julio), fetchCSV(CSV.agosto), fetchCSV(CSV.ahorros)
     ]);
-    sheetData = { mayo, junio, julio, ahorros };
+    sheetData = { mayo, junio, julio, agosto, ahorros };
     document.getElementById('loading-overlay').style.display='none';
     renderAll();
   } catch(e) {
@@ -603,6 +620,38 @@ function calcBucket(upTo, keyword) {
   return t;
 }
 
+function addGastoMudanza() {
+  const concepto = document.getElementById('mudanza-gasto-concepto').value.trim();
+  const monto = parseFloat(document.getElementById('mudanza-gasto-monto').value)||0;
+  if (!concepto || !monto) return;
+  gastosMudanza.push({concepto, monto});
+  document.getElementById('mudanza-gasto-concepto').value = '';
+  document.getElementById('mudanza-gasto-monto').value = '';
+  renderMetas();
+}
+
+function delGastoMudanza(idx) {
+  gastosMudanza.splice(idx,1);
+  renderMetas();
+}
+
+function renderGastosMudanza() {
+  const total = gastosMudanza.reduce((s,g)=>s+g.monto,0);
+  let html = '';
+  gastosMudanza.forEach((g,i)=>{
+    html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:.75rem;">
+      <span style="color:var(--text);">${g.concepto}</span>
+      <span style="display:flex;align-items:center;gap:8px;">
+        <span style="font-weight:500;">${fmt(g.monto)}</span>
+        <button class="btn btn-sm btn-danger" onclick="delGastoMudanza(${i})">✕</button>
+      </span>
+    </div>`;
+  });
+  const el = document.getElementById('mudanza-gastos-list');
+  if(el) el.innerHTML = html || '<div style="font-size:.72rem;color:var(--muted);font-style:italic;">Sin gastos registrados</div>';
+  return total;
+}
+
 function renderMetas() {
   const mes=getMes();
   const meta=parseFloat(document.getElementById('meta-anual').value)||0;
@@ -628,8 +677,15 @@ function renderMetas() {
 
   // Mudanza
   const mudAcum=calcBucket(mes,'Ahorro Mudanza');
-  set('mudanza-base',fmt(BASE_MUDANZA)); set('mudanza-acum',fmt(mudAcum)); set('mudanza-total',fmt(BASE_MUDANZA+mudAcum));
-  const mub=document.getElementById('mudanza-badge'); if(mub) mub.textContent=fmt(BASE_MUDANZA+mudAcum);
+  const mudBruto=BASE_MUDANZA+mudAcum;
+  const mudGastado=renderGastosMudanza();
+  const mudRestante=mudBruto-mudGastado;
+  set('mudanza-base',fmt(BASE_MUDANZA));
+  set('mudanza-acum',fmt(mudAcum));
+  set('mudanza-bruto',fmt(mudBruto));
+  set('mudanza-gastado',fmt(mudGastado));
+  set('mudanza-restante',fmt(mudRestante));
+  const mub=document.getElementById('mudanza-badge'); if(mub){ mub.textContent=fmt(mudRestante); mub.className='badge '+(mudRestante>=0?'badge-warn':'badge-err'); }
 
   // Chart
   const labels=MESES_ORDER.map(m=>MESES_DISPLAY[m]);
