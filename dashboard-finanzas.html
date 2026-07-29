@@ -322,14 +322,9 @@ input[type=number]{text-align:right;}
     </div>
     <div class="bucket">
       <div class="bucket-title">📦 Ahorro Mudanza <span id="mudanza-badge" class="badge badge-warn">—</span></div>
-      <div style="font-size:.7rem;color:var(--muted);margin-bottom:8px;">Colchón sin meta · Base: $690.000</div>
-      <div class="bucket-row" style="margin-bottom:10px;">
-        <div><div>Base previa</div><div id="mudanza-base">—</div></div>
-        <div><div>Aportes acum.</div><div id="mudanza-acum">—</div></div>
-        <div><div>Total bruto</div><div id="mudanza-bruto">—</div></div>
-      </div>
-      <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px;">
-        <div style="font-size:.72rem;color:var(--muted);margin-bottom:5px;">Gastos de mudanza registrados</div>
+      <div style="font-size:.7rem;color:var(--muted);margin-bottom:8px;">Total disponible: <span id="mudanza-bruto" style="font-weight:500;color:var(--text);">—</span></div>
+      <div style="border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:8px;">
+        <div style="font-size:.72rem;color:var(--muted);margin-bottom:5px;">Gastos registrados</div>
         <div id="mudanza-gastos-list"></div>
         <div style="display:flex;gap:8px;margin-top:6px;">
           <input type="text" id="mudanza-gasto-concepto" placeholder="Concepto" style="flex:2;">
@@ -337,7 +332,7 @@ input[type=number]{text-align:right;}
           <button class="btn btn-sm" onclick="addGastoMudanza()" style="background:var(--amber-bg);color:var(--amber);border-color:var(--amber-bg);">+ Agregar</button>
         </div>
       </div>
-      <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
         <div style="font-size:.78rem;"><span style="color:var(--muted);">Total gastado:</span> <span id="mudanza-gastado" style="font-weight:500;color:var(--red);">—</span></div>
         <div style="font-size:.9rem;font-weight:500;"><span style="color:var(--muted);font-size:.72rem;">Saldo restante:</span> <span id="mudanza-restante" style="color:var(--amber);">—</span></div>
       </div>
@@ -364,7 +359,7 @@ const CSV = {
 // ── CONSTANTS ──
 const BASE_BEBE    = 4800000;
 // Gastos de mudanza (persistidos en memoria, editables)
-let gastosMudanza = [{concepto:'Gastos agosto', monto:1235000}];
+let gastosMudanza = [{concepto:'Compra aire', monto:1235000}];
 const BASE_CARRO   = 0;
 const BASE_MUDANZA = 690000;
 const MESES_LABELS = ['Mayo','Junio','Julio'];
@@ -680,8 +675,6 @@ function renderMetas() {
   const mudBruto=BASE_MUDANZA+mudAcum;
   const mudGastado=renderGastosMudanza();
   const mudRestante=mudBruto-mudGastado;
-  set('mudanza-base',fmt(BASE_MUDANZA));
-  set('mudanza-acum',fmt(mudAcum));
   set('mudanza-bruto',fmt(mudBruto));
   set('mudanza-gastado',fmt(mudGastado));
   set('mudanza-restante',fmt(mudRestante));
