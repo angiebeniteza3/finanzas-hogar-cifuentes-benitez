@@ -320,23 +320,7 @@ input[type=number]{text-align:right;}
         <div><div>Total</div><div style="color:var(--marco);" id="carro-total">—</div></div>
       </div>
     </div>
-    <div class="bucket">
-      <div class="bucket-title">📦 Ahorro Mudanza <span id="mudanza-badge" class="badge badge-warn">—</span></div>
-      <div style="font-size:.7rem;color:var(--muted);margin-bottom:8px;">Total disponible: <span id="mudanza-bruto" style="font-weight:500;color:var(--text);">—</span></div>
-      <div style="border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:8px;">
-        <div style="font-size:.72rem;color:var(--muted);margin-bottom:5px;">Gastos registrados</div>
-        <div id="mudanza-gastos-list"></div>
-        <div style="display:flex;gap:8px;margin-top:6px;">
-          <input type="text" id="mudanza-gasto-concepto" placeholder="Concepto" style="flex:2;">
-          <input type="number" id="mudanza-gasto-monto" placeholder="Monto" style="flex:1;">
-          <button class="btn btn-sm" onclick="addGastoMudanza()" style="background:var(--amber-bg);color:var(--amber);border-color:var(--amber-bg);">+ Agregar</button>
-        </div>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div style="font-size:.78rem;"><span style="color:var(--muted);">Total gastado:</span> <span id="mudanza-gastado" style="font-weight:500;color:var(--red);">—</span></div>
-        <div style="font-size:.9rem;font-weight:500;"><span style="color:var(--muted);font-size:.72rem;">Saldo restante:</span> <span id="mudanza-restante" style="color:var(--amber);">—</span></div>
-      </div>
-    </div>
+
   </div>
   <div class="card">
     <div class="card-title">Ahorro Bebé acumulado vs Meta</div>
@@ -357,11 +341,10 @@ const CSV = {
 };
 
 // ── CONSTANTS ──
-const BASE_BEBE    = 4800000;
-// Gastos de mudanza (persistidos en memoria, editables)
-let gastosMudanza = [{concepto:'Compra aire', monto:1235000}];
+const BASE_BEBE    = 5500000;
+
 const BASE_CARRO   = 0;
-const BASE_MUDANZA = 690000;
+
 const MESES_LABELS = ['Mayo','Junio','Julio'];
 const MESES_ORDER = ['mayo','junio','julio','agosto'];
 const MESES_DISPLAY = {mayo:'Mayo', junio:'Junio', julio:'Julio', agosto:'Agosto'};
@@ -615,38 +598,6 @@ function calcBucket(upTo, keyword) {
   return t;
 }
 
-function addGastoMudanza() {
-  const concepto = document.getElementById('mudanza-gasto-concepto').value.trim();
-  const monto = parseFloat(document.getElementById('mudanza-gasto-monto').value)||0;
-  if (!concepto || !monto) return;
-  gastosMudanza.push({concepto, monto});
-  document.getElementById('mudanza-gasto-concepto').value = '';
-  document.getElementById('mudanza-gasto-monto').value = '';
-  renderMetas();
-}
-
-function delGastoMudanza(idx) {
-  gastosMudanza.splice(idx,1);
-  renderMetas();
-}
-
-function renderGastosMudanza() {
-  const total = gastosMudanza.reduce((s,g)=>s+g.monto,0);
-  let html = '';
-  gastosMudanza.forEach((g,i)=>{
-    html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:.75rem;">
-      <span style="color:var(--text);">${g.concepto}</span>
-      <span style="display:flex;align-items:center;gap:8px;">
-        <span style="font-weight:500;">${fmt(g.monto)}</span>
-        <button class="btn btn-sm btn-danger" onclick="delGastoMudanza(${i})">✕</button>
-      </span>
-    </div>`;
-  });
-  const el = document.getElementById('mudanza-gastos-list');
-  if(el) el.innerHTML = html || '<div style="font-size:.72rem;color:var(--muted);font-style:italic;">Sin gastos registrados</div>';
-  return total;
-}
-
 function renderMetas() {
   const mes=getMes();
   const meta=parseFloat(document.getElementById('meta-anual').value)||0;
@@ -670,15 +621,7 @@ function renderMetas() {
   set('carro-base',fmt(BASE_CARRO)); set('carro-acum',fmt(carrAcum)); set('carro-total',fmt(BASE_CARRO+carrAcum));
   const cb=document.getElementById('carro-badge'); if(cb) cb.textContent=fmt(BASE_CARRO+carrAcum);
 
-  // Mudanza
-  const mudAcum=calcBucket(mes,'Ahorro Mudanza');
-  const mudBruto=BASE_MUDANZA+mudAcum;
-  const mudGastado=renderGastosMudanza();
-  const mudRestante=mudBruto-mudGastado;
-  set('mudanza-bruto',fmt(mudBruto));
-  set('mudanza-gastado',fmt(mudGastado));
-  set('mudanza-restante',fmt(mudRestante));
-  const mub=document.getElementById('mudanza-badge'); if(mub){ mub.textContent=fmt(mudRestante); mub.className='badge '+(mudRestante>=0?'badge-warn':'badge-err'); }
+
 
   // Chart
   const labels=MESES_ORDER.map(m=>MESES_DISPLAY[m]);
