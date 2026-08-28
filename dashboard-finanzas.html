@@ -151,7 +151,8 @@ input[type=number]{text-align:right;}
       <option value="mayo">Mayo 2026</option>
       <option value="junio">Junio 2026</option>
       <option value="julio">Julio 2026</option>
-      <option value="agosto" selected>Agosto 2026</option>
+      <option value="agosto">Agosto 2026</option>
+      <option value="septiembre" selected>Septiembre 2026</option>
     </select>
     <button class="btn-reload" onclick="loadAllData()">↺ Actualizar</button>
   </div>
@@ -336,7 +337,8 @@ const CSV = {
   mayo:   'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDLssK6adZfkPMgXC34ASBaFznDAP2BEVJMS0Bm2FN4P4FN-IT_MQkjpvu0_V-DZSlZlevZjjgcbTO/pub?gid=598036146&single=true&output=csv',
   junio:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDLssK6adZfkPMgXC34ASBaFznDAP2BEVJMS0Bm2FN4P4FN-IT_MQkjpvu0_V-DZSlZlevZjjgcbTO/pub?gid=1404526422&single=true&output=csv',
   julio:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDLssK6adZfkPMgXC34ASBaFznDAP2BEVJMS0Bm2FN4P4FN-IT_MQkjpvu0_V-DZSlZlevZjjgcbTO/pub?gid=437554041&single=true&output=csv',
-  agosto: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDLssK6adZfkPMgXC34ASBaFznDAP2BEVJMS0Bm2FN4P4FN-IT_MQkjpvu0_V-DZSlZlevZjjgcbTO/pub?gid=618111072&single=true&output=csv',
+  agosto:     'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDLssK6adZfkPMgXC34ASBaFznDAP2BEVJMS0Bm2FN4P4FN-IT_MQkjpvu0_V-DZSlZlevZjjgcbTO/pub?gid=618111072&single=true&output=csv',
+  septiembre: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDLssK6adZfkPMgXC34ASBaFznDAP2BEVJMS0Bm2FN4P4FN-IT_MQkjpvu0_V-DZSlZlevZjjgcbTO/pub?gid=1732086585&single=true&output=csv',
   ahorros:'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDLssK6adZfkPMgXC34ASBaFznDAP2BEVJMS0Bm2FN4P4FN-IT_MQkjpvu0_V-DZSlZlevZjjgcbTO/pub?gid=255021068&single=true&output=csv',
 };
 
@@ -346,12 +348,12 @@ const BASE_BEBE    = 2800000;
 const BASE_CARRO   = 0;
 
 const MESES_LABELS = ['Mayo','Junio','Julio'];
-const MESES_ORDER = ['mayo','junio','julio','agosto'];
-const MESES_DISPLAY = {mayo:'Mayo', junio:'Junio', julio:'Julio', agosto:'Agosto'};
+const MESES_ORDER = ['mayo','junio','julio','agosto','septiembre'];
+const MESES_DISPLAY = {mayo:'Mayo', junio:'Junio', julio:'Julio', agosto:'Agosto', septiembre:'Septiembre'};
 const CC = ['#264653','#2A9D8F','#E9C46A','#F4A261','#E76F51','#8ECAE6','#B5838D','#A8DADC','#457B9D'];
 
 // ── STATE ──
-let sheetData = { mayo: [], junio: [], julio: [], agosto: [], ahorros: [] };
+let sheetData = { mayo: [], junio: [], julio: [], agosto: [], septiembre: [], ahorros: [] };
 let chartType = 'bar';
 let donutC=null, trendC=null, ingC=null, gasC=null, ahorroC=null;
 
@@ -382,10 +384,10 @@ async function loadAllData() {
   document.getElementById('loading-overlay').style.display='flex';
   document.getElementById('error-banner').style.display='none';
   try {
-    const [mayo, junio, julio, agosto, ahorros] = await Promise.all([
-      fetchCSV(CSV.mayo), fetchCSV(CSV.junio), fetchCSV(CSV.julio), fetchCSV(CSV.agosto), fetchCSV(CSV.ahorros)
+    const [mayo, junio, julio, agosto, septiembre, ahorros] = await Promise.all([
+      fetchCSV(CSV.mayo), fetchCSV(CSV.junio), fetchCSV(CSV.julio), fetchCSV(CSV.agosto), fetchCSV(CSV.septiembre), fetchCSV(CSV.ahorros)
     ]);
-    sheetData = { mayo, junio, julio, agosto, ahorros };
+    sheetData = { mayo, junio, julio, agosto, septiembre, ahorros };
     document.getElementById('loading-overlay').style.display='none';
     renderAll();
   } catch(e) {
